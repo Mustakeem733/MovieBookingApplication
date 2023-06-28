@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,6 +41,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
+@CrossOrigin(origins = "http:localhost:3000")
 @RequestMapping("/api/v1.0/moviebooking")
 @OpenAPIDefinition(
 		info = @Info(
@@ -75,7 +77,7 @@ public class MovieController {
 	private NewTopic topic;
 	
 	@PutMapping("/{loginId}/forgot")
-	//@SecurityRequirement(name = "Bearer Authentication")
+	@SecurityRequirement(name = "Bearer Authentication")
 	@Operation(summary = "reser password")
 	@PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
 	public ResponseEntity<String> changePassword(@RequestBody LoginRequest loginRequest, @PathVariable String loginId){
@@ -130,7 +132,7 @@ public class MovieController {
 	
 	
 	@PostMapping("/{movieName}/add")
-	@SecurityRequirement(name = "Bearer Authentication")
+	@SecurityRequirement(name = "Bearer Authentication")        
 	@Operation(summary = "book ticket")
 	@PreAuthorize("hasRole('USER')")
 	public ResponseEntity<String> bookTickets(@RequestBody Ticket ticket, @PathVariable String movieName){
@@ -172,24 +174,48 @@ public class MovieController {
 	@GetMapping("/getallbookedtickets/{movieName}")
 	@SecurityRequirement(name = "Bearer Authentication")
 	@Operation(summary = "get all booked tickets(Admin Only)")
-	@PreAuthorize("hasRole('ADMIN')")
+	@PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
 	public ResponseEntity<List<Ticket>> getAllBookedTickets(@PathVariable String movieName){
 		return new ResponseEntity<>(movieService.getAllBookedTickets(movieName), HttpStatus.OK);
 	}
 	
 	
-	@PutMapping("/{movieName}/update/{ticketId}")
+//	@PutMapping("/{movieName}/update/{ticketId}")
+//	@PreAuthorize("hasRole('ADMIN')")
+//	public ResponseEntity<String> updateTicketStatus(@PathVariable String movieName, @PathVariable ObjectId ticketId) {
+//		List<Movie> movie = movieRepository.findByMovieName(movieName);
+//		List<Ticket> ticket = ticketRepository.findBy_id(ticketId);
+//		if(movie == null) {
+//			throw new MoviesNotFound("Movie not found: " + movieName);
+//		}
+//		
+//		if(ticket ==  null) {
+//			throw new NoSuchElementException("Ticket Not found: " + ticketId);
+//		}
+//		int ticketsBooked = movieService.getTotalNoTickets(movieName);
+//		for(Movie movies : movie) {
+//			if(ticketsBooked >= movies.getNoOfTicketsAvailable()) {
+//				movies.setTicketStatus("SOLD OUT");
+//			} else {
+//				movies.setTicketStatus("BOOK ASAP");
+//			}
+//			movieService.saveMovie(movies);
+//		}
+//		kafkaTemplate.send(topic.name(), "ticket status updated by the Admin for movie: " + movieName);
+//		return new ResponseEntity<>("Ticket status updated successfully", HttpStatus.OK);
+// 	}
+	
+	
+	@PutMapping("/{movieName}/update")
+	@SecurityRequirement(name = "Bearer Authentication")
 	@PreAuthorize("hasRole('ADMIN')")
-	public ResponseEntity<String> updateTicketStatus(@PathVariable String movieName, @PathVariable ObjectId ticketId) {
+	public ResponseEntity<String> updateTicketStatus(@PathVariable String movieName) {
 		List<Movie> movie = movieRepository.findByMovieName(movieName);
-		List<Ticket> ticket = ticketRepository.findBy_id(ticketId);
+		//List<Ticket> ticket = ticketRepository.findBy_id(ticketId);
 		if(movie == null) {
 			throw new MoviesNotFound("Movie not found: " + movieName);
 		}
 		
-		if(ticket ==  null) {
-			throw new NoSuchElementException("Ticket Not found: " + ticketId);
-		}
 		int ticketsBooked = movieService.getTotalNoTickets(movieName);
 		for(Movie movies : movie) {
 			if(ticketsBooked >= movies.getNoOfTicketsAvailable()) {
@@ -204,7 +230,9 @@ public class MovieController {
  	}
 	
 	
-	@DeleteMapping("/movieName/delete")
+	
+	
+	@DeleteMapping("/{movieName}/delete")
 	@SecurityRequirement(name = "Bearer Authentication")
 	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<String> deleteMovie(@PathVariable String movieName){

@@ -20,10 +20,10 @@ public class Ticket {
 	private String theatreName;
 	private Integer noOfTickets;
 	private List<String> seatNumber;
-	public Ticket(String loginId, String movieName, String theaterName, Integer noOfTickets, List<String> seatNumber) {
+	public Ticket(String loginId, String movieName, String theatreName, Integer noOfTickets, List<String> seatNumber) {
 		this.loginId = loginId;
 		this.movieName = movieName;
-		this.theatreName = theaterName;
+		this.theatreName = theatreName;
 		this.noOfTickets = noOfTickets;
 		this.seatNumber = seatNumber;
 	}
